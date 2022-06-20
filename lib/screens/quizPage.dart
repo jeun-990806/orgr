@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/services.dart';
 
+import 'quizEndPage.dart';
+
 import '../classes/byteSources.dart';
 import '../classes/music.dart';
 import '../classes/question.dart';
 
 import 'dart:math';
-import 'dart:io';
 
 class QuizPage extends StatefulWidget {
   QuizPage({required this.title}) : super();
@@ -26,7 +27,8 @@ class _QuizPageState extends State<QuizPage> {
   int _currentAudioIndex = 0;
   List<String> _answers = ['', '', '', ''];
   var _quizCreator;
-  String _message = '';
+
+  int score = 0;
 
   @override
   void initState(){
@@ -43,18 +45,16 @@ class _QuizPageState extends State<QuizPage> {
         new Music('LAST DANCE', 'Tempalay', 189, BytesSource(await rootBundle.load('assets/media/04.webm').then((value) => value.buffer.asUint8List()))),
       ];
       _audioData.shuffle();
-      _next();
+      setState(() { _setAnswers(); });
+      _play();
     } catch (e) {
       print("Error loading audio source: $e");
-      _message = 'error loading audio source';
     }
   }
 
   void _next() {
-    sleep(Duration(milliseconds: 100));
     setState(() {
       _currentAudioIndex++;
-      if(_currentAudioIndex >= this._audioData.length) _currentAudioIndex = 0;
       _setAnswers();
     });
     _play();
@@ -73,10 +73,13 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void _checkAnswer(String answer){
-    setState(() {
-      if(_quizCreator.checkAnswer(answer)) _message = 'Right!';
-      else _message = 'Wrong...';
-    });
+    if(_quizCreator.checkAnswer(answer)) score += 10;
+  }
+
+  @override
+  void dispose(){
+    this._player.stop();
+    super.dispose();
   }
 
   @override
@@ -85,19 +88,38 @@ class _QuizPageState extends State<QuizPage> {
         appBar: AppBar(
           title: Text(widget.title),
         ),
-        body: Center(
+        body: Container(
+            margin: EdgeInsets.all(10),
             child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  for(var k=0; k<this._answers.length; k++)
-                    OutlinedButton(
-                        onPressed: () {
-                          _checkAnswer(this._answers[k]);
-                          _next();
-                        },
-                        child: Text(this._answers[k])
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40.0,
+                    child: Text(
+                      '노래 제목 맞히기',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.left,
                     ),
-                  Text(_message)
+                  ),
+                  for(var k=0; k<this._answers.length; k++)
+                    SizedBox(
+                      width: double.infinity,
+                      child:
+                        OutlinedButton(
+                          onPressed: () {
+                            _checkAnswer(this._answers[k]);
+                            if(this._currentAudioIndex == this._answers.length - 1){
+                              Navigator.of(context).pop();
+                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => QuizEndPage(result: score)));
+                            }else _next();
+                          },
+                          child: Text(this._answers[k]),
+                        ),
+                    )
                 ]
             )
         )
