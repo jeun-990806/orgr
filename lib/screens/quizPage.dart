@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/services.dart';
@@ -72,14 +74,49 @@ class _QuizPageState extends State<QuizPage> {
     _answers = _quizCreator.getOptions();
   }
 
-  void _checkAnswer(String answer){
-    if(_quizCreator.checkAnswer(answer)) score += 10;
+  bool _checkAnswer(String answer){
+    var result = _quizCreator.checkAnswer(answer);
+    if(result) score += 10;
+    return result;
   }
 
   @override
   void dispose(){
-    this._player.stop();
+    //this._player.stop();
     super.dispose();
+  }
+
+  OverlayEntry _makeOverlayEntry(var isRight){
+    return OverlayEntry(
+      builder: (context) => Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                    color: Colors.black12.withOpacity(0.4)
+                ),
+              ),
+            ),
+            if(isRight)
+              Image.asset(
+                'assets/images/right.png',
+                width: 200,
+                height: 150,
+                fit: BoxFit.fill,
+              )
+            else
+              Image.asset(
+                  'assets/images/wrong.png',
+                  width: 200,
+                  height: 150,
+                  fit: BoxFit.fill
+              )
+          ]
+      ),
+    );
   }
 
   @override
@@ -111,11 +148,18 @@ class _QuizPageState extends State<QuizPage> {
                       child:
                         OutlinedButton(
                           onPressed: () {
-                            _checkAnswer(this._answers[k]);
-                            if(this._currentAudioIndex == this._answers.length - 1){
-                              Navigator.of(context).pop();
-                              Navigator.of(context).push(MaterialPageRoute(builder: (context) => QuizEndPage(result: score)));
-                            }else _next();
+                            var result = _checkAnswer(this._answers[k]);
+                            var overlay = _makeOverlayEntry(result);
+                            Overlay.of(context)!.insert(overlay);
+                            Timer(Duration(seconds: 3), () {
+                              overlay.remove();
+                              if(this._currentAudioIndex == this._answers.length - 1){
+                                Navigator.of(context).pop();
+                                Navigator.of(context).push(MaterialPageRoute(builder: (context) => QuizEndPage(result: score)));
+                              }else {
+                                _next();
+                              }
+                            });
                           },
                           child: Text(this._answers[k]),
                         ),
