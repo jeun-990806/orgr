@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'classes/sshClient.dart';
 import 'screens/quizIntroPage.dart';
 
 void main() {

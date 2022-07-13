@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'quizPage.dart';
+import 'layoutTestPage.dart';
 
 class QuizIntroPage extends StatelessWidget {
   QuizIntroPage() : super();
@@ -15,6 +16,12 @@ class QuizIntroPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).push(_createRoute());
+              },
+              child: const Text('Start!'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(builder: (context) => LayoutTestPage()));
               },
               child: const Text('Start!'),
             ),

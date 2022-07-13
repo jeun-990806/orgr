@@ -7,7 +7,6 @@ class Question {
   int _answerIndex = -1;
 
   Question(String answer, int length) {
-    print(answer);
     this._optionLength = length;
     this._createOptions(answer);
   }
